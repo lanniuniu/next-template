@@ -1,48 +1,41 @@
-import { useRouter } from 'next/router'
+import { useRouter } from "next/router";
 import en from "@/../public/locales/en.json"; // 英文语言包
 import zh from "@/../public/locales/zh.json"; // 中文语言包
 import { useCallback } from "react";
 
-const LanguageMap = {
+const LanguageMap: {
+  [key: string]: any;
+} = {
   en,
   zh,
 };
 
 /**
- * Generates a translation function that retrieves the value corresponding to a given key in the current language pack.
- * If the key is not found or not provided, the key itself is returned, allowing easy identification of untranslated fields.
- * Supports parameterized translations, where placeholders in the value string are replaced with actual values provided in the params object.
+ * Generates a translation function based on the current router locale.
  *
- * @param {any} key - The key to look up in the language pack.
- * @param {any} params - An object containing key-value pairs of parameters to be replaced in the translated value.
- * @return {any} The translated value, with placeholders replaced by actual values.
+ * @param {string} key - The key to look up in the language pack.
+ * @return {string} The translated text for the given key. If the key is not found or is empty, the key itself is returned.
  */
 const useTranslation = () => {
   const router = useRouter();
   const jsonFun = useCallback(
-    (key: any, params: any = {}) => {
+    (key: string) => {
       // 获取当前的语言包里面key所对应的value值
-      // @ts-ignore
-      let value = LanguageMap[router.locale][key];
-      /*
-		如果传key进来，或者没有找到value，就直接返回key就好了，
-		页面上就显示key，方便找到漏翻译的字段	
-	  */
-      if (!key || !value) return key;
+      const keys = key.split(".");
+      console.log(keys);
+      let translatedText = router.locale && LanguageMap[router.locale];
+      console.log(translatedText);
 
-      /*
-		这里是为了能够让我们写的hook能支持传参，比如找到的value为'{name}
-		今年{age}岁啦～'，这里的nameg和age都是为参数，也就是后面可以这种
-		形式传进来:
-		const { t } = useTranslation()
-		<div>{ t('app.message',{name:"张三", age:18}) }</div>
-		// 翻译后的结果就是
-		<div>张三今年18岁啦～</div>
-	  */
-      Object.keys(params).forEach((item) => {
-        value = value.replace(new RegExp(`{${item}}`, "g"), params[item]);
+      keys.forEach((k: string) => {
+        console.log(k);
+        translatedText = translatedText && translatedText[k];
       });
-      return value;
+      /*
+      如果传key进来，或者没有找到value，就直接返回key就好了，
+      页面上就显示key，方便找到漏翻译的字段	
+      */
+      if (!key || !translatedText) return key;
+      return translatedText;
     },
     [router.locale]
   );
